@@ -9,32 +9,60 @@
 #include <netdb.h>
 #define BMAX 512
 
-/* ALL THAT IS LEFT:
-    
-*/
 
 int open_clientfd(char * sName, int sPort){
-    int clientfd;
-    struct hostent *hp;
-    struct sockaddr_in serveraddr;
-
-    if((clientfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        return -1;
-
-    if((hp = gethostbyname(sName)) == NULL)
-        return -2;
-
-    bzero((char *) &serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    bcopy((char *)hp->h_addr, (char *)&serveraddr.sin_addr.s_addr, hp->h_length);
-    serveraddr.sin_port = htons(sPort);
-
-    //to establish a connection
-    if(connect(clientfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0)
-        return -1;
-    return clientfd;
+    int clientfd; 
+  struct hostent *hp; 
+  struct sockaddr_in serveraddr; 
+ 
+  if ((clientfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    return -1; /* check errno for cause of error */ 
+ 
+  /* Fill in the server's IP address and port */ 
+  if ((hp = gethostbyname(sName)) == NULL) 
+    return -2; /* check h_errno for cause of error */ 
+  bzero((char *) &serveraddr, sizeof(serveraddr)); 
+  serveraddr.sin_family = AF_INET; 
+  bcopy((char *)hp->h_addr,  
+        (char *)&serveraddr.sin_addr.s_addr, hp->h_length); 
+  serveraddr.sin_port = htons(sPort); 
+ 
+  /* Establish a connection with the server */ 
+  if (connect(clientfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) 
+    return -1; 
+  return clientfd;
 }
 
+int checkEcode(char * buf){
+    char eCode[3];
+    char * hlr = strstr(buf, " "); //error code appears after 1st space
+    for(int i = 0;i < 3;i++){
+        eCode[i] = hlr[i + 1];
+    }
+    
+    if(atoi(eCode) != 200){
+        int i = 0;
+        printf("Error: ");
+        while(hlr[i] != '\n'){
+            printf("%c", hlr[i++]);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int conCliSer(int * clientfd, char * buf, int sPort, char * sName){
+    *clientfd = open_clientfd(sName, sPort);
+    
+    if(*clientfd < 0){ //Ensure that connection is successful
+        printf("Error: connection failed!");
+        return 1;
+    }
+
+    write(*clientfd, buf, strlen(buf)); //write buffer to feed   
+
+    return 0;
+}
 
 int main(int argc, char ** argv){
     /*Arguments:
@@ -47,96 +75,52 @@ int main(int argc, char ** argv){
         printf("%d is not the correct number of arguments!", argc);
         return EXIT_FAILURE;
     }
-    char * sName = argv[1]; //server name
-    int sPort = atoi(argv[2]); //server port
-    char * pName = argv[3]; //path name
-    char buf[BMAX]; //buffer
-    int clientfd; 
+    char * sName = argv[1], * pName = argv[3], buf[BMAX];
+    int sPort = atoi(argv[2]), clientfd;
+    bzero(buf, BMAX); //initialize buf values
+    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pName); //get request 1
 
+    //connect to client server
+    if(conCliSer(&clientfd, buf, sPort, sName)){
+        return EXIT_FAILURE;
+    }
+
+    if(!read(clientfd, buf, BMAX)){ //read feed into buffer
+        printf("Error: Failed to read the client feed to the buffer!");
+        return EXIT_FAILURE;
+    }
+    
+    //Get error code, and check if 200:
+    if(checkEcode(buf)){
+        return EXIT_FAILURE;
+    }
+
+    //Print out server response:
+    printf("%s", buf);
+
+    //Get new path:
+    char * pNew;
+    if((pNew = strstr(buf, "\r\n\r\n")) != NULL){
+        pNew += sizeof(char) * 4;
+    }
+
+    int p = 0;
+    while (pNew[p] != '\n'){
+      p++;
+    }
+    pNew[p] = '\0'; //terminate end of path
+
+    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pNew); //get request 2
+
+    if(conCliSer(&clientfd, buf, sPort, sName)){
+        return EXIT_FAILURE;
+    }
     bzero(buf, BMAX);
 
-    //connect to the correct server port:
-
-    clientfd = open_clientfd(sName, sPort);
-
-    if(clientfd < 0){
-        printf("Could not open connection!");
-        return EXIT_FAILURE;
+    while (read(clientfd, buf, BMAX-1)) {
+        printf("%s", buf);
+        bzero(buf, BMAX);
     }
     
-    write(clientfd, buf, strlen(buf)); //write buffer to feed
-
-    //send 1st GET request to server:
-    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pName);
-    int bRead = read(clientfd, buf, BMAX);
-
-    //Get error code and check if 200:
-    char eCode[3];
-    for(int i = 0;i < 3;i++){
-        eCode[i] += buf[9+i];
-    } 
-    if(atoi(eCode) != 200){
-        printf("Error: %d\n\n", atoi(eCode));
-        return EXIT_FAILURE;
-    }
-
-    //print server response:
-    //fprintf(stdout, "%s", buf);
     return EXIT_SUCCESS;
-
-    //---------------------------------ERRORS ARISE FROM THIS SECTION---------------------------------
-    
-    /*bzero(buf, BMAX);
-    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pName);
-
-    //connect to the correct server port:
-
-    clientfd = open_clientfd(sName, sPort);
-
-    if(clientfd < 0){
-        printf("Could not open connection!");
-        return EXIT_FAILURE;
-    }
-    
-    write(clientfd, buf, strlen(buf)); //write buffer to feed
-
-    //send 1st GET request to server:
-
-    bRead = read(clientfd, buf, BMAX);
-
-    //Get error code and check if 200:
-    eCode[3];
-    for(int i = 0;i < 3;i++){
-        eCode[i] += buf[9+i];
-    }
-
-    if(atoi(eCode) != 200){
-        printf("Error: %d\n\n", atoi(eCode));
-        return EXIT_FAILURE;
-    }
-
-    //print server response:
-    fprintf(stdout, "%s", buf); 
-
-    
-    //Reopen Connection With server:
-    clientfd = open_clientfd(sName, sPort);
-
-    if(clientfd < 0){
-        printf("Could not open connection!");
-        return EXIT_FAILURE;
-    }
-    
-    write(clientfd, buf, strlen(buf)); //write buffer to feed
-
-    //send 2nd GET request to server:
-    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pName);
-    bRead = read(clientfd, buf, BMAX);
-
-    //print complete server response
-    fprintf(stdout, "%s", buf);
-    
-    close(clientfd);
-
-    return EXIT_SUCCESS;*/
 }

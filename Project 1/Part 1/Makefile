@@ -8,7 +8,7 @@ CLIENT = "httpclient"
 SERVER = "dtunes.ecn.purdue.edu"
 PORT = "80"
 
-all : clean client test-short
+all : client 
 
 client : httpclient.*.c
 	$(CC) httpclient.*.c -o $(CLIENT) 
@@ -22,5 +22,5 @@ test-very-long :
 	./$(CLIENT) $(SERVER) $(PORT) /ece463/lab1/path_very_long.txt > out2.txt
 
 clean:
-	rm -f httpclient httpclient.jhelfman *.o out1.txt vallog testgen
+	rm -f httpclient httpclient.jhelfman *.o out1.txt out2.txt vallog testgen
 	clear
