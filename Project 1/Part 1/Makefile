@@ -6,12 +6,31 @@
 CC = gcc
 CLIENT = "httpclient"
 SERVER = "dtunes.ecn.purdue.edu"
-PORT = "80"
+PORT = "2045"
 
-all : client 
+all : client server fork multi
 
 client : httpclient.*.c
 	$(CC) httpclient.*.c -o $(CLIENT) 
+
+server : httpserver.*.c
+	$(CC) httpserver.*.c -o httpserver
+
+fork: httpserver_fork.*.c
+	$(CC) httpserver_fork.*.c -o httpserverF
+
+multi: test.c multi_service_server.*.c
+	#$(CC) test.c -o multi_service_server
+	$(CC) multi_service_server.*.c -o multi_service_server
+
+runs: httpserver
+	./httpserver $(PORT)
+
+runf: httpserverF
+	./httpserverF $(PORT)
+
+runm: multi_service_server
+	./multi_service_server $(PORT) "2046"
 
 #NOTE : This command will write the output to "out1.txt"
 test-short :
@@ -22,5 +41,5 @@ test-very-long :
 	./$(CLIENT) $(SERVER) $(PORT) /ece463/lab1/path_very_long.txt > out2.txt
 
 clean:
-	rm -f httpclient httpclient.jhelfman *.o out1.txt out2.txt vallog testgen
+	rm -f httpclient httpserver httpserverF *.o out1.txt out2.txt vallog testgen
 	clear

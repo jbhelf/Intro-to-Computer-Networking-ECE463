@@ -71,14 +71,15 @@ int main(int argc, char ** argv){
         3. Path Name (/ece463/lab1/path_short.txt)
     */
 
-    if(argc != 4){
+    if(argc != 5){
         printf("%d is not the correct number of arguments!", argc);
         return EXIT_FAILURE;
     }
     char * sName = argv[1], * pName = argv[3], buf[BMAX];
     int sPort = atoi(argv[2]), clientfd;
+    int shift = atoi(argv[3]);
     bzero(buf, BMAX); //initialize buf values
-    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pName); //get request 1
+    sprintf(buf, "GET %s %d HTTP/1.0\r\n\r\n", pName, shift); //get request 1
 
     //connect to client server
     if(conCliSer(&clientfd, buf, sPort, sName)){
@@ -110,7 +111,7 @@ int main(int argc, char ** argv){
     }
     pNew[p] = '\0'; //terminate end of path
 
-    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", pNew); //get request 2
+    sprintf(buf, "GET %s %d HTTP/1.0\r\n\r\n", pName, shift); //get request 2
 
     if(conCliSer(&clientfd, buf, sPort, sName)){
         return EXIT_FAILURE;
