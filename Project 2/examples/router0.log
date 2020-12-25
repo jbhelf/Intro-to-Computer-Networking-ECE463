@@ -1,0 +1,20 @@
+<R0 -> R0> Path: R0, Cost: 0
+<R0 -> R1> Path: R0 -> R1, Cost: 4
+<R0 -> R2> Path: R0 -> R2, Cost: 50
+
+<R0 -> R0> Path: R0, Cost: 0
+<R0 -> R1> Path: R0 -> R1, Cost: 4
+<R0 -> R2> Path: R0 -> R2, Cost: 50
+<R0 -> R3> Path: R0 -> R2 -> R3, Cost: 56
+
+<R0 -> R0> Path: R0, Cost: 0
+<R0 -> R1> Path: R0 -> R1, Cost: 4
+<R0 -> R2> Path: R0 -> R1 -> R2, Cost: 5
+<R0 -> R3> Path: R0 -> R2 -> R3, Cost: 56
+
+<R0 -> R0> Path: R0, Cost: 0
+<R0 -> R1> Path: R0 -> R1, Cost: 4
+<R0 -> R2> Path: R0 -> R1 -> R2, Cost: 5
+<R0 -> R3> Path: R0 -> R1 -> R2 -> R3, Cost: 11
+
+6:Converged

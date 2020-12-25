@@ -1,0 +1,14 @@
+<R3 -> R3> Path: R3, Cost: 0
+<R3 -> R2> Path: R3 -> R2, Cost: 6
+
+<R3 -> R3> Path: R3, Cost: 0
+<R3 -> R2> Path: R3 -> R2, Cost: 6
+<R3 -> R0> Path: R3 -> R2 -> R0, Cost: 56
+<R3 -> R1> Path: R3 -> R2 -> R1, Cost: 7
+
+<R3 -> R3> Path: R3, Cost: 0
+<R3 -> R2> Path: R3 -> R2, Cost: 6
+<R3 -> R0> Path: R3 -> R2 -> R1 -> R0, Cost: 11
+<R3 -> R1> Path: R3 -> R2 -> R1, Cost: 7
+
+6:Converged
